@@ -2,6 +2,9 @@ import streamlit as st
 from streamlit_chat import message
 import json
 
+# Set page configuration
+st.set_page_config(initial_sidebar_state="collapsed")
+
 # Load questions and categories from JSON file
 def load_questions(filepath):
     with open(filepath, "r") as file:
@@ -17,8 +20,24 @@ def main():
         st.session_state.current_section_index = 0
         st.session_state.current_question_index = 0
         st.session_state.answers = {}
+    if 'results_id' not in st.session_state:  # Initialize ID counter
+        st.session_state.results_id = 0
+    if 'js_selected_answer' not in st.session_state:
+        st.session_state.js_selected_answer = None  # Initialize js_selected_answer
 
     st.title("Knowledge Management SECI Processes Questionnaire")
+
+    # JavaScript function to update session state
+    st.markdown(
+        """
+        <script>
+            function setSelectedAnswer(selectedValue) {
+                window.st.session_state.js_selected_answer = selectedValue;
+            }
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
 
     # Display sections and questions in a chat-like format
     chat_history = []  # Store chat messages for visual clarity
@@ -27,8 +46,9 @@ def main():
         section = sections[st.session_state.current_section_index]
         questions = section["questions"]
 
-        # Display section title
-        message(f"**{section['name']}**", is_user=False)
+        # Display section title (when starting the first question)
+        if st.session_state.current_question_index == 0:
+            message(f"**{section['name']}**", is_user=False)
 
         if st.session_state.current_question_index < len(questions):
             question = questions[st.session_state.current_question_index]
@@ -38,44 +58,106 @@ def main():
 
             # Display previous conversation (if any)
             for past_message in chat_history:
-                message(**past_message)  # Unpack for correct formatting
+                message(**past_message)
 
-            # Get user input (using radio buttons with default visuals)
-            options = [1, 2, 3, 4, 5]
-            answer = st.radio("Your answer:", options, key=f'radio_{st.session_state.current_section_index}-{st.session_state.current_question_index}', horizontal=True)
+            # Get user input with custom radio buttons
+            options = ["1", "2", "3", "4", "5"]
+            answer_labels = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
 
-            if st.button("Submit", key=f'submit_button_{st.session_state.current_section_index}-{st.session_state.current_question_index}'):
-                try:
-                    val = int(answer)
-                    if 1 <= val <= 5:
-                        # Save the answer
-                        if section["name"] not in st.session_state.answers:
-                            st.session_state.answers[section["name"]] = []
-                        st.session_state.answers[section["name"]].append(val)
+            col1, col2, col3, col4, col5 = st.columns(5)
 
-                        # Store message in chat history
-                        chat_history.append({"is_user": True, "message": f"You answered: {answer}"})
+            with col1:
+                st.markdown(
+                    f"""<div class="custom-radio" onclick="setSelectedAnswer('{options[0]}')">
+                        <input type="radio" id="radio_1" name="answer" value="{options[0]}">
+                        <label for="radio_1">{answer_labels[0]}</label>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+            with col2:
+                st.markdown(
+                    f"""<div class="custom-radio" onclick="setSelectedAnswer('{options[1]}')">
+                        <input type="radio" id="radio_2" name="answer" value="{options[1]}">
+                        <label for="radio_2">{answer_labels[1]}</label>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+            with col3:
+                st.markdown(
+                    f"""<div class="custom-radio" onclick="setSelectedAnswer('{options[2]}')">
+                        <input type="radio" id="radio_3" name="answer" value="{options[2]}">
+                        <label for="radio_3">{answer_labels[2]}</label>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+            with col4:
+                st.markdown(
+                    f"""<div class="custom-radio" onclick="setSelectedAnswer('{options[3]}')">
+                        <input type="radio" id="radio_4" name="answer" value="{options[3]}">
+                        <label for="radio_4">{answer_labels[3]}</label>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+            with col5:
+                st.markdown(
+                    f"""<div class="custom-radio" onclick="setSelectedAnswer('{options[4]}')">
+                        <input type="radio" id="radio_5" name="answer" value="{options[4]}">
+                        <label for="radio_5">{answer_labels[4]}</label>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
 
-                        # Move to the next question
-                        st.session_state.current_question_index += 1
-                        if st.session_state.current_question_index >= len(questions):
-                            st.session_state.current_section_index += 1
-                            st.session_state.current_question_index = 0
-                        st.experimental_rerun()
-                    else:
-                        st.error("Please enter a valid integer between 1 and 5.")
-                except ValueError:
-                    st.error("Please enter a valid integer between 1 and 5.")
+            # Store user answers
+            if st.button("Submit"):
+                selected_answer = st.session_state.js_selected_answer
+                if selected_answer:
+                    answers = [selected_answer] * 5  # Create a placeholder list
+                    if section["name"] not in st.session_state.answers:
+                        st.session_state.answers[section["name"]] = []
+                    st.session_state.answers[section["name"]].append(answers)
+
+                    # Move to the next question or section
+                    st.session_state.current_question_index += 1
+                    if st.session_state.current_question_index >= len(questions):
+                        st.session_state.current_section_index += 1
+                        st.session_state.current_question_index = 0
+
+                    # Clear previous chat history
+                    chat_history.clear()
+
+                    # Rerun the app to display next question or section
+                    st.experimental_rerun()
     else:
-        # Calculate and display average results per category
         st.header("Average Results per Category")
-        for category, answers in st.session_state.answers.items():
-            avg_score = sum(answers) / len(answers)
-            st.write(f"- {category}: {avg_score:.2f}")
+        if not st.session_state.answers:
+            st.write("No answers recorded yet.")
+        else:
+            results = {}
+            for category, answer_lists in st.session_state.answers.items():
+                scores_by_category = zip(*answer_lists)
+                avg_scores = [sum(scores) / len(scores) for scores in scores_by_category]
+                results[category] = avg_scores 
+
+            # Display results 
+            for category, scores in results.items():
+                st.write(f"- {category}: {scores}") 
 
         # Save results into a JSON file
+        results_data = []
+        with open("results.json", "r+") as outfile:
+            try:
+                results_data = json.load(outfile)
+            except json.JSONDecodeError:
+                pass  
+
+        results_data.append({
+            "id": st.session_state.results_id,
+            "result": results
+        })
+        st.session_state.results_id += 1
+
         with open("results.json", "w") as outfile:
-            json.dump(st.session_state.answers, outfile)
+            json.dump(results_data, outfile) 
 
 if __name__ == "__main__":
     main()
