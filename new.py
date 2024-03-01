@@ -20,10 +20,10 @@ def main():
         st.session_state.current_section_index = 0
         st.session_state.current_question_index = 0
         st.session_state.answers = {}
-    if 'results_id' not in st.session_state:  # Initialize ID counter
+    if 'results_id' not in st.session_state:
         st.session_state.results_id = 0
     if 'js_selected_answer' not in st.session_state:
-        st.session_state.js_selected_answer = None  # Initialize js_selected_answer
+        st.session_state.js_selected_answer = None
 
     st.title("Knowledge Management SECI Processes Questionnaire")
 
@@ -111,21 +111,18 @@ def main():
             if st.button("Submit"):
                 selected_answer = st.session_state.js_selected_answer
                 if selected_answer:
-                    answers = [selected_answer] * 5  # Create a placeholder list
-                    if section["name"] not in st.session_state.answers:
-                        st.session_state.answers[section["name"]] = []
-                    st.session_state.answers[section["name"]].append(answers)
-
+                    category = section["name"]
+                    if category not in st.session_state.answers:
+                        st.session_state.answers[category] = []
+                    st.session_state.answers[category].append(selected_answer)
                     # Move to the next question or section
                     st.session_state.current_question_index += 1
                     if st.session_state.current_question_index >= len(questions):
                         st.session_state.current_section_index += 1
                         st.session_state.current_question_index = 0
-
                     # Clear previous chat history
                     chat_history.clear()
-
-                    # Rerun the app to display next question or section
+                    # Rerun the app to display the next question or section
                     st.experimental_rerun()
     else:
         st.header("Average Results per Category")
@@ -133,31 +130,12 @@ def main():
             st.write("No answers recorded yet.")
         else:
             results = {}
-            for category, answer_lists in st.session_state.answers.items():
-                scores_by_category = zip(*answer_lists)
-                avg_scores = [sum(scores) / len(scores) for scores in scores_by_category]
-                results[category] = avg_scores 
-
+            for category, answer_list in st.session_state.answers.items():
+                avg_score = sum(map(int, answer_list)) / len(answer_list)
+                results[category] = avg_score
             # Display results 
-            for category, scores in results.items():
-                st.write(f"- {category}: {scores}") 
-
-        # Save results into a JSON file
-        results_data = []
-        with open("results.json", "r+") as outfile:
-            try:
-                results_data = json.load(outfile)
-            except json.JSONDecodeError:
-                pass  
-
-        results_data.append({
-            "id": st.session_state.results_id,
-            "result": results
-        })
-        st.session_state.results_id += 1
-
-        with open("results.json", "w") as outfile:
-            json.dump(results_data, outfile) 
+            for category, avg_score in results.items():
+                st.write(f"- {category}: {avg_score}") 
 
 if __name__ == "__main__":
     main()
