@@ -1,9 +1,7 @@
 import streamlit as st
 from streamlit_chat import message
 import json
-
-# Set page configuration
-st.set_page_config(initial_sidebar_state="collapsed")
+import pandas as pd
 
 # Load questions and categories from JSON file
 def load_questions(filepath):
@@ -11,131 +9,96 @@ def load_questions(filepath):
         data = json.load(file)
     return data["Sections"]
 
+# Main app
 def main():
-    # Load questions
-    sections = load_questions("questionnaire.json")
-
-    # Initialize session state variables
+    # Initialize session state variables if not already done
     if 'current_section_index' not in st.session_state:
         st.session_state.current_section_index = 0
         st.session_state.current_question_index = 0
         st.session_state.answers = {}
-    if 'results_id' not in st.session_state:
-        st.session_state.results_id = 0
-    if 'js_selected_answer' not in st.session_state:
-        st.session_state.js_selected_answer = None
 
-    st.title("Knowledge Management SECI Processes Questionnaire")
+    sections = load_questions("questionnaire.json")
 
-    # JavaScript function to update session state
-    st.markdown(
-        """
-        <script>
-            function setSelectedAnswer(selectedValue) {
-                window.st.session_state.js_selected_answer = selectedValue;
-            }
-        </script>
-        """,
-        unsafe_allow_html=True
-    )
+    # CSS for custom radio button styling
+    st.markdown("""
+    <style>
+    div.stRadio > div[role="radiogroup"] > label {
+        font-size: 18px; 
+        margin-right: 20px;
+        background-color: #F0F0F0; 
+        border: 2px solid #007BFF; 
+        padding: 8px 15px;
+        border-radius: 5px; 
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    # Display sections and questions in a chat-like format
-    chat_history = []  # Store chat messages for visual clarity
-
+    # Check if there are more sections and questions
     if st.session_state.current_section_index < len(sections):
         section = sections[st.session_state.current_section_index]
         questions = section["questions"]
-
-        # Display section title (when starting the first question)
-        if st.session_state.current_question_index == 0:
-            message(f"**{section['name']}**", is_user=False)
+         
+        # Display section title (when starting the first question of the section)
+        st.title(section["name"])
 
         if st.session_state.current_question_index < len(questions):
             question = questions[st.session_state.current_question_index]
+            message(question["question"])
 
-            # Display current question
-            message(question["question"], is_user=False)
+            # Wait for user input
+            options = [1, 2, 3, 4, 5]
+            answer = st.radio("Your answer:", options, 
+                              key=f'{st.session_state.current_section_index}-{st.session_state.current_question_index}', 
+                              horizontal=True)
 
-            # Display previous conversation (if any)
-            for past_message in chat_history:
-                message(**past_message)
+            # Generate a unique key for the "Submit" button
+            submit_button_key = f'submit-{st.session_state.current_section_index}-{st.session_state.current_question_index}'
 
-            # Get user input with custom radio buttons
-            options = ["1", "2", "3", "4", "5"]
-            answer_labels = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
-
-            col1, col2, col3, col4, col5 = st.columns(5)
-
-            with col1:
-                st.markdown(
-                    f"""<div class="custom-radio" onclick="setSelectedAnswer('{options[0]}')">
-                        <input type="radio" id="radio_1" name="answer" value="{options[0]}">
-                        <label for="radio_1">{answer_labels[0]}</label>
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-            with col2:
-                st.markdown(
-                    f"""<div class="custom-radio" onclick="setSelectedAnswer('{options[1]}')">
-                        <input type="radio" id="radio_2" name="answer" value="{options[1]}">
-                        <label for="radio_2">{answer_labels[1]}</label>
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-            with col3:
-                st.markdown(
-                    f"""<div class="custom-radio" onclick="setSelectedAnswer('{options[2]}')">
-                        <input type="radio" id="radio_3" name="answer" value="{options[2]}">
-                        <label for="radio_3">{answer_labels[2]}</label>
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-            with col4:
-                st.markdown(
-                    f"""<div class="custom-radio" onclick="setSelectedAnswer('{options[3]}')">
-                        <input type="radio" id="radio_4" name="answer" value="{options[3]}">
-                        <label for="radio_4">{answer_labels[3]}</label>
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-            with col5:
-                st.markdown(
-                    f"""<div class="custom-radio" onclick="setSelectedAnswer('{options[4]}')">
-                        <input type="radio" id="radio_5" name="answer" value="{options[4]}">
-                        <label for="radio_5">{answer_labels[4]}</label>
-                    </div>""",
-                    unsafe_allow_html=True,
-                )
-
-            # Store user answers
-            if st.button("Submit"):
-                selected_answer = st.session_state.js_selected_answer
-                if selected_answer:
-                    category = section["name"]
-                    if category not in st.session_state.answers:
-                        st.session_state.answers[category] = []
-                    st.session_state.answers[category].append(selected_answer)
-                    # Move to the next question or section
-                    st.session_state.current_question_index += 1
-                    if st.session_state.current_question_index >= len(questions):
-                        st.session_state.current_section_index += 1
-                        st.session_state.current_question_index = 0
-                    # Clear previous chat history
-                    chat_history.clear()
-                    # Rerun the app to display the next question or section
-                    st.experimental_rerun()
-    else:
-        st.header("Average Results per Category")
-        if not st.session_state.answers:
-            st.write("No answers recorded yet.")
+            if st.button("Submit", key=submit_button_key):
+                try:
+                    val = int(answer)
+                    if 1 <= val <= 5:
+                        # Save the answer
+                        if section["name"] not in st.session_state.answers:
+                            st.session_state.answers[section["name"]] = []
+                        st.session_state.answers[section["name"]].append(val)
+                         
+                        # Move to the next question
+                        st.session_state.current_question_index += 1
+                        if st.session_state.current_question_index >= len(questions):
+                            # Move to the next section
+                            st.session_state.current_section_index += 1
+                            st.session_state.current_question_index = 0
+                        st.experimental_rerun()
+                    else:
+                        st.error("Please enter a valid integer between 1 and 5.")
+                except ValueError:
+                    st.error("Please enter a valid integer between 1 and 5.")
         else:
-            results = {}
-            for category, answer_list in st.session_state.answers.items():
-                avg_score = sum(map(int, answer_list)) / len(answer_list)
-                results[category] = avg_score
-            # Display results 
-            for category, avg_score in results.items():
-                st.write(f"- {category}: {avg_score}") 
+            # This should not happen, but it's a safeguard
+            st.session_state.current_section_index += 1
+            st.session_state.current_question_index = 0
+            st.experimental_rerun()
+    else:
+        st.header("Results")
 
+        # Calculate and display average results per category
+        results = {}
+        for category, answers in st.session_state.answers.items():
+            avg_score = sum(answers) / len(answers)
+            results[category] = avg_score
+
+        # Display results in a table
+        if st.session_state.answers:
+            df = pd.DataFrame(results.items(), columns=['Category', 'Average Score'])
+            st.table(df)
+        else:
+            st.write("No answers recorded yet.")
+
+        # Save results into a JSON file
+        with open("results.json", "w") as outfile:
+            json.dump(results, outfile)
+
+# Run the app
 if __name__ == "__main__":
     main()
