@@ -19,15 +19,12 @@ def main():
 
     st.title("Knowledge Management SECI Processes Questionnaire")
 
-    # Display sections and questions in a chat-like format
-    chat_history = []  # Store chat messages for visual clarity
-
-    # Link the questionnaire to Streamlit
+    # Display sections and questions
     if st.session_state.current_section_index < len(sections):
         section = sections[st.session_state.current_section_index]
         questions = section["questions"]
 
-        # Show title of the section when starting the first question of the section
+        # Display section title (when starting the first question)
         if st.session_state.current_question_index == 0:
             st.write(f"**{section['name']}**")
 
@@ -37,32 +34,43 @@ def main():
             # Display current question
             st.write(question["question"])
 
-            # Display previous conversation (if any)
-            for i, past_message in enumerate(chat_history):
-                st.write(past_message["message"])  # Adjusted to display message directly
-
-            # Custom UI/UX for the radio button
+            # Get user input with custom radio buttons
             options = ["1", "2", "3", "4", "5"]
+            answer_labels = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
             radio_style = """
                 display: none;
             """
+            custom_css = """
+                .radio-label {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    margin-bottom: 10px;
+                    cursor: pointer;
+                }
+                .radio-input {
+                    display: none;
+                }
+                .radio-input:checked + .radio-label {
+                    background-color: #f0f0f0;
+                    border-radius: 5px;
+                }
+            """
+
+            # Inject custom CSS
+            st.markdown(f'<style>{custom_css}</style>', unsafe_allow_html=True)
 
             col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
-                answer_1 = st.radio("1", options, style=radio_style, key="radio_1")
-                st.write("1️⃣")
+                answer_1 = st.radio(label=f'<div class="radio-label">{answer_labels[0]}</div>', options=options, key="radio_1")
             with col2:
-                answer_2 = st.radio("2", options, style=radio_style, key="radio_2")
-                st.write("2️⃣")
+                answer_2 = st.radio(label=f'<div class="radio-label">{answer_labels[1]}</div>', options=options, key="radio_2")
             with col3:
-                answer_3 = st.radio("3", options, style=radio_style, key="radio_3")
-                st.write("3️⃣")
+                answer_3 = st.radio(label=f'<div class="radio-label">{answer_labels[2]}</div>', options=options, key="radio_3")
             with col4:
-                answer_4 = st.radio("4", options, style=radio_style, key="radio_4")
-                st.write("4️⃣")
+                answer_4 = st.radio(label=f'<div class="radio-label">{answer_labels[3]}</div>', options=options, key="radio_4")
             with col5:
-                answer_5 = st.radio("5", options, style=radio_style, key="radio_5")
-                st.write("5️⃣")
+                answer_5 = st.radio(label=f'<div class="radio-label">{answer_labels[4]}</div>', options=options, key="radio_5")
 
             # Submit button and answer validation
             if st.button("Submit", key=f'submit_button_{st.session_state.current_section_index}-{st.session_state.current_question_index}'):
@@ -74,10 +82,7 @@ def main():
                             if section["name"] not in st.session_state.answers:
                                 st.session_state.answers[section["name"]] = []
                             st.session_state.answers[section["name"]].append(val)
-
-                            # Store message in chat history
-                            chat_history.append({"is_user": True, "message": f"You answered: {val}"})
-
+                            
                             # Move to the next question
                             st.session_state.current_question_index += 1
                             if st.session_state.current_question_index >= len(questions):
@@ -90,18 +95,16 @@ def main():
                 except ValueError:
                     st.error("Please enter valid integers between 1 and 5.")
 
-    # When all the questions are answered, display the average score for each section
     else:
+        # When all questions are answered, display the average score for each section
         st.header("Average Results per Category")
-        averages = {}
         for category, answers in st.session_state.answers.items():
             avg_score = sum(answers) / len(answers)
-            averages[category] = avg_score
             st.write(f"- {category}: {avg_score:.2f}")
 
         # Save results into a JSON file
         with open("results.json", "w") as outfile:
-            json.dump(averages, outfile)
+            json.dump(st.session_state.answers, outfile)
 
 if __name__ == "__main__":
     main()
