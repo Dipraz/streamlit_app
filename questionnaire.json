@@ -1,0 +1,110 @@
+{
+
+    "Title" : "Knowledge Management SECI Processes Questionnaire",
+    
+    "Sections": [ 
+    {
+        "name": "MENT",
+        "id": "S0",
+        "questions": [
+                {"id": 1 , "question": "When employees start a new activity, they are supported by supervisors for a specific period of time."},
+                {"id": 2 , "question": "When facing problems in their work, employees interact with their colleagues constructively"},
+                {"id": 3 , "question": "Once hired, employees are trained by more experienced colleagues."},
+                {"id": 4 , "question": "Newcomers are supported in their job for a specific period of time."},
+                {"id": 5 , "question": "More experienced colleagues provide less experienced colleagues with constructive feedback about their work"},
+                {"id": 6 , "question": "There are moments dedicated to the sharing of opinions between colleagues"}
+    
+            ]
+    },
+    {
+        "name": "SHA",
+        "id": "S1",
+                "questions": [
+                {"id": 7 , "question": "Colleagues are open to share knowledge and skills."},
+                {"id": 8 , "question": "Each one’s know-how is made available to colleagues to deal with the problems that may arise."},
+                {"id": 9 , "question": "We share useful knowledge to improve job results."},
+                {"id": 10 , "question": "Colleagues make their professional experiences available, if someone has difficulty in completing their work."},
+                {"id": 11 , "question": "The knowledge base needed to carry out one's work is always accessible."},
+                {"id": 12 , "question": "Colleagues are willing to share their knowledge and skills."}
+    
+            ]
+    },
+    {
+        "name": "REFL",
+        "id": "S2",
+        "questions": [
+                {"id": 13 , "question": "Individuals are willing and open to changing the way they work in order to improve performance."},
+                {"id": 14 , "question": "We can learn and acquire benefits from experience."},
+                {"id": 15 , "question": "It is a good habit to change working methods in light of the results achieved."},
+                {"id": 16 , "question": "We monitor the effectiveness of our performance in order to plan future actions."},
+                {"id": 17 , "question": "Reflecting upon past experiences allows us to improve the methodologies in use."},
+                {"id": 18 , "question": "At the end of each project, we examine the mistakes made in order to prevent their repetition in the future"}
+            ]
+    },
+    
+    {
+        "name": "MEM",
+        "id": "S3",
+        "questions": [
+                {"id": 19 , "question": "Good practices are collected in databases so that employees may consult them when needed."},
+                {"id": 20 , "question": "Managers believe that successes, failures and past events should always be considered as examples for future decisions"},
+                {"id": 21 , "question": "Handbooks are produced for internal use on how to carry out activities."},
+                {"id": 22 , "question": "We produce a lot of useful and informative documents regarding the results achieved."},
+                {"id": 23 , "question": "Activities are monitored by collecting and processing relevant data."},
+                {"id": 24 , "question": "We can consult handbooks or archives to improve our work."}
+            ]
+    },
+    
+    {
+        "name": "OCOM",
+        "id": "S4",
+        "questions": [
+                {"id": 25 , "question": "Employees are informed about the work of other units."},
+                {"id": 26 , "question": "We organize meetings in order to keep us updated."},
+                {"id": 27 , "question": "Information is shared between supervisors and employees."},
+                {"id": 28 , "question": "We are kept informed about what happens within the organization."},
+                {"id": 29 , "question": "Information is shared between the different organizational units."},
+                {"id": 30 , "question": "Useful information is effectively disseminated at work."}
+            ]
+    },
+    
+    {
+        "name": "TEC",
+        "id": "S5",
+        "questions": [
+                {"id": 31 , "question": "The technologies we use promote and support the circulation of ideas."},
+                {"id": 32 , "question": "Technologies that improve information dissemination and communication between employees are used."},
+                {"id": 33 , "question": "The use of information technology is guaranteed to all members of the organization. "},
+                {"id": 34 , "question": "We have invested in technologies that facilitate access to information sources and databases."},
+                {"id": 35 , "question": "Technologies allow us to easily share knowledge and information between different units."},
+                {"id": 36 , "question": "All employees have access to technologies that facilitate the updating of information."}
+            ]
+    },
+    
+    {
+        "name": "TRAI",
+        "id": "S6",
+        "questions": [
+                {"id": 37 , "question": "Employees’ work skills are developed through training."},
+                {"id": 38 , "question": "Supervision is a typical tool used to enhance the professional knowledge of employees"},
+                {"id": 39 , "question": "We are encouraged to take training and professional development courses"},
+                {"id": 40 , "question": "Job promotions are supported by training interventions."},
+                {"id": 41 , "question": "Training activities are carried out on the basis of employees’ needs"},
+                {"id": 42 , "question": "New employees are provided with adequate training in order to develop the skills required for their role."}
+            ]
+    },
+    
+    {
+        "name": "DEV",
+        "id": "S7",
+        "questions": [
+                {"id": 43 , "question": "We have time/resources to reflect upon how to improve our work."},
+                {"id": 44 , "question": "Employees’ extra-work skills are valued."},
+                {"id": 45 , "question": "We are encouraged to propose new ideas or projects."},
+                {"id": 46 , "question": "Appropriate resources are available for developing new skills."},
+                {"id": 47 , "question": "We are supported in tackling the complex challenges of our professional field."},
+                {"id": 48 , "question": "Talents are valued."}
+            ]
+    }
+    ]
+    }
