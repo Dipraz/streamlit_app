@@ -4,7 +4,8 @@ from groq import Groq
 import os
 import time
 from langchain_groq import ChatGroq
-st.set_page_config(page_icon="💬", layout="wide",
+
+st.set_page_config(page_icon="", layout="wide",
                    page_title="Groq Goes Brrrrrrrr...")
 
 from dotenv import load_dotenv
@@ -12,7 +13,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 ## load the Groq API key
-groq_api_key=os.environ['GROQ_API_KEY']
+groq_api_key = os.environ['GROQ_API_KEY']
+
+
 def icon(emoji: str):
     """Shows an emoji as a Notion-style page icon."""
     st.write(
@@ -21,7 +24,7 @@ def icon(emoji: str):
     )
 
 
-icon("🏎️")
+icon("️")
 
 st.subheader("Groq Chat Streamlit App", divider="rainbow", anchor=False)
 
@@ -40,7 +43,7 @@ models = {
     "gemma-7b-it": {"name": "Gemma-7b-it", "tokens": 8192, "developer": "Google"},
     "llama2-70b-4096": {"name": "LLaMA2-70b-chat", "tokens": 4096, "developer": "Meta"},
     "llama3-70b-8192": {"name": "LLaMA3-70b-8192", "tokens": 8192, "developer": "Meta"},
-    "llama3-8b-8192": {"name": "LLaMA3-8b-8192", "tokens": 8192, "developer": "Meta"},
+    "llama3-8b-8192": {"name": "LLaMA3-8b-8192", "tokens": 8192, developer: "Meta"},
     "mixtral-8x7b-32768": {"name": "Mixtral-8x7b-Instruct-v0.1", "tokens": 32768, "developer": "Mistral"},
 }
 
@@ -76,7 +79,7 @@ with col2:
 
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
-    avatar = '🤖' if message["role"] == "assistant" else '👨‍💻'
+    avatar = '' if message["role"] == "assistant" else '‍'
     with st.chat_message(message["role"], avatar=avatar):
         st.markdown(message["content"])
 
@@ -89,44 +92,42 @@ def generate_chat_responses(chat_completion) -> Generator[str, None, None]:
 
 
 if prompt := st.chat_input("Enter your prompt here..."):
+    
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    with st.chat_message("user", avatar='👨‍💻'):
+    with st.chat_message("user", avatar='‍'):
         st.markdown(prompt)
-      try:
-          chat_completion = client.chat.completions.create(
-              model=model_option,
-              messages=[
-                  {
-                      "role": m["role"],
-                      "content": m["content"]
-                  }
-                  for m in st.session_state.messages
-              ],
-              max_tokens=max_tokens,
-              stream=False
-          )
-          full_response = chat_completion.choices[0].message.content
-      except AttributeError:
-          # Handle the case where choices is not available
-          st.error("Unexpected response format from Groq API")
-          full_response = None      
-    # Fetch response from Groq API
-    
-        # Use the generator function with st.write_stream
-        with st.chat_message("assistant", avatar="🤖"):
-            st.write(full_response)
-            for chunk in chat_completion:
-                if chunk.choices[0].message.content:
-                    st.text(chunk.choices[0].message.content)
-    
 
-            # Update message content dynamically using a loop with sleep
-        for i in range(1, len(full_response) // 100 + 1):
-          st.write(full_response[i * 100 : (i + 1) * 100])
-          time.sleep(0.1) 
-        
-    except Exception as e:
-        st.error(e, icon="🚨")
-        # Set full_response to a default value or handle the error accordingly
-        full_response = None
+    try:
+        chat_completion = client.chat.completions.create(
+            model=model_option,
+            messages=[
+                {
+                    "role": m["role"],
+                    "content": m["content"]
+                }
+                for m in st.session_state.messages
+            ],
+            max_tokens=max_tokens,
+            stream=False
+        )
+        full_response = chat_completion.choices[0].message.content
+    except AttributeError:
+        # Handle the case where choices is not available
+        st.error("Unexpected response format from Groq API")
+        full_response = "An error occurred while processing your request."
+
+    # Use the generator function with st.write_stream
+    with st.chat_message("assistant", avatar=""):
+        st.write(full_response)
+        for chunk in generate_chat_responses(chat_completion):
+            st.text(chunk)
+
+    # Update message content dynamically using a loop with sleep
+    for i in range(1, len(full_response) // 100 + 1):
+        st.write(full_response[i * 100: (i + 1) * 100])
+        time.sleep(0.1)
+
+except Exception as e:
+    st.error(e, icon="")
+    full_response = None
