@@ -92,7 +92,7 @@ if prompt := st.chat_input("Enter your prompt here..."):
         st.markdown(prompt)
     # Fetch response from Groq API
     try:
-        chat_completion = client.chat.completions.create(
+        chat_completion = groq_api_key.chat.completions.create(
             model=model_option,
             messages=[
                 {
