@@ -93,21 +93,25 @@ if prompt := st.chat_input("Enter your prompt here..."):
 
     with st.chat_message("user", avatar='👨‍💻'):
         st.markdown(prompt)
+      try:
+          chat_completion = client.chat.completions.create(
+              model=model_option,
+              messages=[
+                  {
+                      "role": m["role"],
+                      "content": m["content"]
+                  }
+                  for m in st.session_state.messages
+              ],
+              max_tokens=max_tokens,
+              stream=False
+          )
+          full_response = chat_completion.choices[0].message.content
+      except AttributeError:
+          # Handle the case where choices is not available
+          st.error("Unexpected response format from Groq API")
+          full_response = None      
     # Fetch response from Groq API
-    try:
-        chat_completion = client.chat.completions.create(
-            model=model_option,
-            messages=[
-                {
-                    "role": m["role"],
-                    "content": m["content"]
-                }
-                for m in st.session_state.messages
-            ],
-            max_tokens=max_tokens,
-            stream=False
-        )
-        full_response = chat_completion.choices[0].message.content
     
         # Use the generator function with st.write_stream
         with st.chat_message("assistant", avatar="🤖"):
