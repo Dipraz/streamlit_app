@@ -25,6 +25,9 @@ icon("🏎️")
 
 st.subheader("Groq Chat Streamlit App", divider="rainbow", anchor=False)
 
+client = Groq(api_key=groq_api_key)
+
+
 # Initialize chat history and selected model
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -92,7 +95,7 @@ if prompt := st.chat_input("Enter your prompt here..."):
         st.markdown(prompt)
     # Fetch response from Groq API
     try:
-        chat_completion = groq_api_key.chat.completions.create(
+        chat_completion = client.chat.completions.create(
             model=model_option,
             messages=[
                 {
