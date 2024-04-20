@@ -1,70 +1,60 @@
 import streamlit as st
-from streamlit_chat import message
-import json
+import os
+from langchain_groq import ChatGroq
+from langchain_community.document_loaders import WebBaseLoader
+from langchain.embeddings import OllamaEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.prompts import ChatPromptTemplate
+from langchain.chains import create_retrieval_chain
+from langchain_community.vectorstores import FAISS
+import time
 
-# Load questions and categories from JSON file
-def load_questions(filepath):
-    with open(filepath, "r") as file:
-        data = json.load(file)
-    return data["Sections"]  # Assuming the questions are organized in 'Sections'
+from dotenv import load_dotenv
+load_dotenv()
 
-# Main app
-def main():
-    # Initialize session state variables if not already done
-    if 'current_section_index' not in st.session_state:
-        st.session_state.current_section_index = 0
-        st.session_state.current_question_index = 0
-        st.session_state.answers = {}
+## load the Groq API key
+groq_api_key=os.environ['GROQ_API_KEY']
 
-    sections = load_questions("questionnaire.json")
+if "vector" not in st.session_state:
+    st.session_state.embeddings=OllamaEmbeddings()
+    st.session_state.loader=WebBaseLoader("https://docs.smith.langchain.com/")
+    st.session_state.docs=st.session_state.loader.load()
 
-    # Check if there are more sections and questions
-    if st.session_state.current_section_index < len(sections):
-        section = sections[st.session_state.current_section_index]
-        questions = section["questions"]
-        
-        if st.session_state.current_question_index < len(questions):
-            question = questions[st.session_state.current_question_index]
-            message( question["question"])
-            
-            # Wait for user input
-            print(f'{st.session_state.current_section_index}-{st.session_state.current_question_index}')
-            options = [1, 2, 3, 4, 5]
-            answer = st.radio("Your answer:", options, key=f'{st.session_state.current_section_index}-{st.session_state.current_question_index}',  horizontal=True,
+    st.session_state.text_splitter=RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=200)
+    st.session_state.final_documents=st.session_state.text_splitter.split_documents(st.session_state.docs[:50])
+    st.session_state.vectors=FAISS.from_documents(st.session_state.final_documents,st.session_state.embeddings)
+
+st.title("ChatGroq Demo")
+llm=ChatGroq(groq_api_key=groq_api_key,
+             model_name="mixtral-8x7b-32768")
+
+prompt=ChatPromptTemplate.from_template(
+"""
+Answer the questions based on the provided context only.
+Please provide the most accurate response based on the question
+<context>
+{context}
+<context>
+Questions:{input}
+
+"""
 )
-            
-            if st.button("Submit", key=f'{st.session_state.current_section_index}-{st.session_state.current_question_index}'):
-                try:
-                    val = int(answer)
-                    if 1 <= val <= 5:
-                        # Save the answer
-                        if section["name"] not in st.session_state.answers:
-                            st.session_state.answers[section["name"]] = []
-                        st.session_state.answers[section["name"]].append(val)
-                        
-                        # Move to the next question
-                        st.session_state.current_question_index += 1
-                        if st.session_state.current_question_index >= len(questions):
-                            # Move to the next section
-                            st.session_state.current_section_index += 1
-                            st.session_state.current_question_index = 0
-                        st.experimental_rerun()
-                    else:
-                        st.error("Please enter a valid integer between 1 and 5.")
-                except ValueError:
-                    st.error("Please enter a valid integer between 1 and 5.")
-        else:
-            # This should not happen, but it's a safeguard
-            st.session_state.current_section_index += 1
-            st.session_state.current_question_index = 0
-            st.experimental_rerun()
-    else:
-        st.write("All questions answered.")
-        # Calculate and display average results per category
-        for category, answers in st.session_state.answers.items():
-            avg_score = sum(answers) / len(answers)
-            st.write(f"Average for {category}: {avg_score:.2f}")
+document_chain = create_stuff_documents_chain(llm, prompt)
+retriever = st.session_state.vectors.as_retriever()
+retrieval_chain = create_retrieval_chain(retriever, document_chain)
 
-# Run the app
-if __name__ == "__main__":
-    main()
+prompt=st.text_input("Input you prompt here")
+
+if prompt:
+    start=time.process_time()
+    response=retrieval_chain.invoke({"input":prompt})
+    print("Response time :",time.process_time()-start)
+    st.write(response['answer'])
+
+    # With a streamlit expander
+    with st.expander("Document Similarity Search"):
+        # Find the relevant chunks
+        for i, doc in enumerate(response["context"]):
+            st.write(doc.page_content)
+            st.write("--------------------------------")
